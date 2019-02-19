@@ -23,12 +23,7 @@ import org.keycloak.adapters.springsecurity.support.KeycloakSpringAdapterUtils;
 import org.keycloak.adapters.springsecurity.token.DirectAccessGrantToken;
 import org.keycloak.adapters.springsecurity.token.KeycloakAuthenticationToken;
 import org.keycloak.common.VerificationException;
-import org.springframework.beans.factory.annotation.Required;
-import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.AuthenticationServiceException;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
@@ -52,9 +47,14 @@ import java.util.Collection;
  */
 public class DirectAccessGrantAuthenticationProvider implements AuthenticationProvider {
 
-    private KeycloakDeployment keycloakDeployment;
-    private DirectAccessGrantService directAccessGrantService;
+    protected final KeycloakDeployment keycloakDeployment;
+    protected final DirectAccessGrantService directAccessGrantService;
     private GrantedAuthoritiesMapper grantedAuthoritiesMapper = null;
+
+    public DirectAccessGrantAuthenticationProvider(KeycloakDeployment keycloakDeployment, DirectAccessGrantService directAccessGrantService) {
+        this.keycloakDeployment = keycloakDeployment;
+        this.directAccessGrantService = directAccessGrantService;
+    }
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
@@ -84,7 +84,7 @@ public class DirectAccessGrantAuthenticationProvider implements AuthenticationPr
      * @return the username from the given <code>principal</code>
      * @throws AuthenticationCredentialsNotFoundException if the username cannot be resolved
      */
-    protected String resolveUsername(Object principal) {
+    public String resolveUsername(Object principal) {
 
         if (principal instanceof String)
             return (String) principal;
@@ -101,16 +101,7 @@ public class DirectAccessGrantAuthenticationProvider implements AuthenticationPr
                 || UsernamePasswordAuthenticationToken.class.isAssignableFrom(authentication);
     }
 
-    @Required
-    public void setKeycloakDeployment(KeycloakDeployment keycloakDeployment)
-    {
-        this.keycloakDeployment = keycloakDeployment;
-    }
 
-    @Required
-    public void setDirectAccessGrantService(DirectAccessGrantService directAccessGrantService) {
-        this.directAccessGrantService = directAccessGrantService;
-    }
 
     /**
      * Set the optional {@link GrantedAuthoritiesMapper} for this {@link AuthenticationProvider}.

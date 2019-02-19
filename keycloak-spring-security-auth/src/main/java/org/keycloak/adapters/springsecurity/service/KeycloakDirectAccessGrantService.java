@@ -67,6 +67,7 @@ public class KeycloakDirectAccessGrantService implements DirectAccessGrantServic
         headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
         body.set("username", username);
         body.set("password", password);
+        body.set("scope", "openid");
         body.set(OAuth2Constants.GRANT_TYPE, OAuth2Constants.PASSWORD);
 
         AccessTokenResponse response = template.postForObject(keycloakDeployment.getTokenUrl(), new HttpEntity<>(body, headers), AccessTokenResponse.class);

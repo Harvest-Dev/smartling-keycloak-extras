@@ -16,14 +16,12 @@
 
 package org.keycloak.adapters.springsecurity.userdetails.authentication;
 
-import org.keycloak.KeycloakPrincipal;
+import org.keycloak.adapters.KeycloakDeployment;
 import org.keycloak.adapters.OidcKeycloakAccount;
 import org.keycloak.adapters.springsecurity.authentication.DirectAccessGrantAuthenticationProvider;
+import org.keycloak.adapters.springsecurity.service.DirectAccessGrantService;
 import org.keycloak.adapters.springsecurity.token.KeycloakAuthenticationToken;
 import org.keycloak.adapters.springsecurity.userdetails.token.KeycloakUserDetailsAuthenticationToken;
-import org.springframework.beans.factory.annotation.Required;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.util.Assert;
@@ -54,24 +52,14 @@ import java.security.Principal;
 public class DirectAccessGrantUserDetailsAuthenticationProvider extends DirectAccessGrantAuthenticationProvider
 {
 
-    private UserDetailsService userDetailsService;
+    protected final UserDetailsService userDetailsService;
 
-    @Override
-    public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-
-        KeycloakAuthenticationToken token = (KeycloakAuthenticationToken) super.authenticate(authentication);
-        String username;
-        UserDetails userDetails;
-
-        if (token == null) {
-            return null;
-        }
-
-        username = this.resolveUsername(token);
-        userDetails = userDetailsService.loadUserByUsername(username);
-
-        return new KeycloakUserDetailsAuthenticationToken(userDetails, token.getAccount(), token.getAuthorities());
+    public DirectAccessGrantUserDetailsAuthenticationProvider(KeycloakDeployment keycloakDeployment, DirectAccessGrantService directAccessGrantService,
+                                                              UserDetailsService userDetailsService) {
+        super(keycloakDeployment, directAccessGrantService);
+        this.userDetailsService = userDetailsService;
     }
+
 
     /**
      * Returns the username from the given {@link KeycloakAuthenticationToken}. By default, this method
@@ -95,10 +83,5 @@ public class DirectAccessGrantUserDetailsAuthenticationProvider extends DirectAc
         Principal principal = account.getPrincipal();
 
         return principal.getName();
-    }
-
-    @Required
-    public void setUserDetailsService(UserDetailsService userDetailsService) {
-        this.userDetailsService = userDetailsService;
     }
 }

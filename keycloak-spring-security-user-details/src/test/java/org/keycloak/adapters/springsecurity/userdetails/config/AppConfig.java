@@ -55,6 +55,9 @@ public class AppConfig
     @Autowired
     protected DirectAccessGrantService directAccessGrantService;
 
+    @Autowired
+    protected KeycloakDeployment keycloakDeployment;
+
     @Bean
     KeycloakDeployment keycloakDeployment(@Value("${keycloak.configurationFile:WEB-INF/keycloak.json}") Resource keycloakConfigFileResource) throws IOException
     {
@@ -63,16 +66,17 @@ public class AppConfig
 
     @Bean
     DirectAccessGrantAuthenticationProvider directAccessGrantAuthenticationProvider() {
-        DirectAccessGrantAuthenticationProvider provider = new DirectAccessGrantAuthenticationProvider();
-        provider.setDirectAccessGrantService(directAccessGrantService);
+        DirectAccessGrantAuthenticationProvider provider = new DirectAccessGrantAuthenticationProvider(keycloakDeployment, directAccessGrantService);
+        //provider.setDirectAccessGrantService(directAccessGrantService);
         return provider;
     }
 
     @Bean
     DirectAccessGrantUserDetailsAuthenticationProvider directAccessGrantUserDetailsAuthenticationProvider() {
-        DirectAccessGrantUserDetailsAuthenticationProvider provider = new DirectAccessGrantUserDetailsAuthenticationProvider();
-        provider.setDirectAccessGrantService(directAccessGrantService);
-        provider.setUserDetailsService(userDetailsService());
+        DirectAccessGrantUserDetailsAuthenticationProvider provider = new DirectAccessGrantUserDetailsAuthenticationProvider(keycloakDeployment,
+                directAccessGrantService, userDetailsService());
+        //provider.setDirectAccessGrantService(directAccessGrantService);
+        //provider.setUserDetailsService(userDetailsService());
         return provider;
     }
 
