@@ -75,7 +75,7 @@ public class KeycloakUserDetailsAuthenticationProviderTest {
         when(principal.getName()).thenReturn(KNOWN_USERNAME);
         when(account.getPrincipal()).thenReturn(principal);
 
-        token = new KeycloakAuthenticationToken(account);
+        token = new KeycloakAuthenticationToken(account, true);
     }
 
     @Test

@@ -17,7 +17,6 @@
 package org.keycloak.adapters.springsecurity.userdetails.authentication;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.keycloak.adapters.springsecurity.token.DirectAccessGrantToken;
@@ -47,7 +46,7 @@ public class DirectAccessGrantUserDetailsAuthenticationProviderTest {
         token = new DirectAccessGrantToken(AppConfig.KNOWN_USERNAME, AppConfig.KNOWN_PASSWORD);
     }
 
-    @Ignore
+    //@Ignore
     @Test
     public void testAuthenticate() throws Exception {
         Authentication authentication = provider.authenticate(token);
@@ -55,7 +54,7 @@ public class DirectAccessGrantUserDetailsAuthenticationProviderTest {
         assertTrue(authentication.isAuthenticated());
     }
 
-    @Ignore
+    //@Ignore
     @Test
     public void testResolveUsername() throws Exception {
         KeycloakAuthenticationToken authentication = (KeycloakAuthenticationToken) provider.authenticate(token);

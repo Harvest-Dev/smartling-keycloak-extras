@@ -18,7 +18,7 @@ package org.keycloak.adapters.springsecurity.support;
 
 import org.keycloak.KeycloakPrincipal;
 import org.keycloak.KeycloakSecurityContext;
-import org.keycloak.RSATokenVerifier;
+import org.keycloak.TokenVerifier;
 import org.keycloak.adapters.AdapterUtils;
 import org.keycloak.adapters.KeycloakDeployment;
 import org.keycloak.adapters.OidcKeycloakAccount;
@@ -35,11 +35,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
 import org.springframework.util.Assert;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Provides common utility methods for working with Spring Security and Keycloak
@@ -107,8 +103,7 @@ public final class KeycloakSpringAdapterUtils {
     public static RefreshableKeycloakSecurityContext createKeycloakSecurityContext(KeycloakDeployment deployment, AccessTokenResponse accessTokenResponse) throws VerificationException {
         String tokenString = accessTokenResponse.getToken();
         String idTokenString = accessTokenResponse.getIdToken();
-        AccessToken accessToken = RSATokenVerifier
-                .verifyToken(tokenString, deployment.getRealmKey(), deployment.getRealmInfoUrl());
+        AccessToken accessToken = TokenVerifier.create(tokenString, AccessToken.class).getToken();
         IDToken idToken;
 
         try {

@@ -67,7 +67,7 @@ public class DirectAccessGrantAuthenticationProvider implements AuthenticationPr
         try {
             context = directAccessGrantService.login(username, password);
             authorities = KeycloakSpringAdapterUtils.createGrantedAuthorities(context, grantedAuthoritiesMapper);
-            token = new KeycloakAuthenticationToken(KeycloakSpringAdapterUtils.createAccount(keycloakDeployment, context), authorities);
+            token = new KeycloakAuthenticationToken(KeycloakSpringAdapterUtils.createAccount(keycloakDeployment, context), true, authorities);
         } catch (VerificationException e) {
             throw new BadCredentialsException("Unable to validate token", e);
         } catch (Exception e) {
