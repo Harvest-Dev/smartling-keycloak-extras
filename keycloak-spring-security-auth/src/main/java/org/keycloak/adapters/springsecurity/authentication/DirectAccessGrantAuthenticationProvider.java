@@ -111,4 +111,12 @@ public class DirectAccessGrantAuthenticationProvider implements AuthenticationPr
     public void setGrantedAuthoritiesMapper(GrantedAuthoritiesMapper grantedAuthoritiesMapper) {
         this.grantedAuthoritiesMapper = grantedAuthoritiesMapper;
     }
+
+    /**
+     *
+     * @param refreshToken
+     */
+    public void logout(String refreshToken) {
+        this.directAccessGrantService.logout(refreshToken);
+    }
 }

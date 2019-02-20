@@ -24,9 +24,7 @@ import org.keycloak.adapters.springsecurity.support.KeycloakSpringAdapterUtils;
 import org.keycloak.common.VerificationException;
 import org.keycloak.representations.AccessTokenResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -73,6 +71,23 @@ public class KeycloakDirectAccessGrantService implements DirectAccessGrantServic
         AccessTokenResponse response = template.postForObject(keycloakDeployment.getTokenUrl(), new HttpEntity<>(body, headers), AccessTokenResponse.class);
 
         return KeycloakSpringAdapterUtils.createKeycloakSecurityContext(keycloakDeployment, response);
+    }
+
+    @Override
+    public void logout(String refreshToken) {
+        final MultiValueMap<String,String> body = new LinkedMultiValueMap<>();
+        final HttpHeaders headers = new HttpHeaders();
+
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+
+        body.set("client_id", keycloakDeployment.getResourceName());
+        body.set("client_secret", keycloakDeployment.getResourceCredentials().get("secret").toString());
+        body.set("refresh_token", refreshToken);
+
+        template.exchange(keycloakDeployment.getLogoutUrl().build(),
+                HttpMethod.POST, new HttpEntity<>(body, headers), String.class);
+
     }
 
 }

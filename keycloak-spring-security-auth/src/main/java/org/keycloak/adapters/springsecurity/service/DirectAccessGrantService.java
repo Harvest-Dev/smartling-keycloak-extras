@@ -42,4 +42,6 @@ public interface DirectAccessGrantService {
      * are incorrect
      */
     RefreshableKeycloakSecurityContext login(String username, String password) throws VerificationException;
+
+    void logout(String refreshToken);
 }

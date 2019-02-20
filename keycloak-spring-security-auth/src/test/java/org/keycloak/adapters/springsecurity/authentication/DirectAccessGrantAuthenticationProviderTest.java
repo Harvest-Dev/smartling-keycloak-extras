@@ -19,6 +19,8 @@ package org.keycloak.adapters.springsecurity.authentication;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.keycloak.KeycloakPrincipal;
+import org.keycloak.adapters.RefreshableKeycloakSecurityContext;
 import org.keycloak.adapters.springsecurity.account.KeycloakRole;
 import org.keycloak.adapters.springsecurity.config.AppConfig;
 import org.keycloak.adapters.springsecurity.token.DirectAccessGrantToken;
@@ -47,6 +49,8 @@ public class DirectAccessGrantAuthenticationProviderTest {
     @Autowired
     private DirectAccessGrantAuthenticationProvider directAccessGrantAuthenticationProvider;
 
+    private String refreshToken;
+
     @Before
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
@@ -56,9 +60,17 @@ public class DirectAccessGrantAuthenticationProviderTest {
     @Test
     public void testAuthenticate() throws Exception {
         DirectAccessGrantToken token = new DirectAccessGrantToken(AppConfig.KNOWN_USERNAME, AppConfig.KNOWN_PASSWORD);
-        Authentication authenication = directAccessGrantAuthenticationProvider.authenticate(token);
-        assertNotNull(authenication);
-        assertTrue(authenication.isAuthenticated());
+        Authentication authentication = directAccessGrantAuthenticationProvider.authenticate(token);
+
+
+        Thread.sleep(200);
+        KeycloakPrincipal principal = (KeycloakPrincipal)authentication.getPrincipal();
+        String refreshToken = ((RefreshableKeycloakSecurityContext) principal.getKeycloakSecurityContext()).getRefreshToken();
+
+        directAccessGrantAuthenticationProvider.logout(refreshToken);
+
+        assertNotNull(authentication);
+        assertTrue(authentication.isAuthenticated());
     }
 
     @Test
@@ -88,6 +100,8 @@ public class DirectAccessGrantAuthenticationProviderTest {
     public void testAuthenticateBadCredentials() throws Exception {
         directAccessGrantAuthenticationProvider.authenticate(new DirectAccessGrantToken("foo", "bar"));
     }
+
+
 
     @Test
     public void testSupports() throws Exception {
