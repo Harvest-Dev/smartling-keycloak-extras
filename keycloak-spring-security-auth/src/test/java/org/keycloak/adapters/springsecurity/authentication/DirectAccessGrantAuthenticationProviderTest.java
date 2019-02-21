@@ -74,6 +74,22 @@ public class DirectAccessGrantAuthenticationProviderTest {
     }
 
     @Test
+    public void testAuthenticateRenew() throws Exception {
+        DirectAccessGrantToken token = new DirectAccessGrantToken(AppConfig.KNOWN_USERNAME, AppConfig.KNOWN_PASSWORD);
+        Authentication authentication = directAccessGrantAuthenticationProvider.authenticate(token);
+
+
+        Thread.sleep(200);
+        KeycloakPrincipal principal = (KeycloakPrincipal)authentication.getPrincipal();
+        String refreshToken = ((RefreshableKeycloakSecurityContext) principal.getKeycloakSecurityContext()).getRefreshToken();
+
+        directAccessGrantAuthenticationProvider.renew(refreshToken);
+
+        assertNotNull(authentication);
+        assertTrue(authentication.isAuthenticated());
+    }
+
+    @Test
     public void testResolveUsername() throws Exception {
         String username = directAccessGrantAuthenticationProvider.resolveUsername(AppConfig.KNOWN_USERNAME);
         assertEquals(AppConfig.KNOWN_USERNAME, username);

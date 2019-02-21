@@ -43,5 +43,18 @@ public interface DirectAccessGrantService {
      */
     RefreshableKeycloakSecurityContext login(String username, String password) throws VerificationException;
 
+    /**
+     * Terminate session at keycloak server
+     * @param refreshToken
+     */
     void logout(String refreshToken);
+
+    /**
+     *  Extend access by providing refreshToken
+     * @param refreshToken
+     * @return
+     */
+    RefreshableKeycloakSecurityContext refresh(String refreshToken) throws VerificationException;
+
+
 }

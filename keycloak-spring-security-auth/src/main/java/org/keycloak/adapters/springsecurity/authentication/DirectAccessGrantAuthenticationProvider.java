@@ -119,4 +119,27 @@ public class DirectAccessGrantAuthenticationProvider implements AuthenticationPr
     public void logout(String refreshToken) {
         this.directAccessGrantService.logout(refreshToken);
     }
+
+    /**
+     *
+     * @param refreshToken
+     * @return
+     */
+    public Authentication renew(String refreshToken) {
+        RefreshableKeycloakSecurityContext context;
+        KeycloakAuthenticationToken token;
+        Collection<? extends GrantedAuthority> authorities;
+
+        try {
+            context = directAccessGrantService.refresh(refreshToken);
+            authorities = KeycloakSpringAdapterUtils.createGrantedAuthorities(context, grantedAuthoritiesMapper);
+            token = new KeycloakAuthenticationToken(KeycloakSpringAdapterUtils.createAccount(keycloakDeployment, context), true, authorities);
+        } catch (VerificationException e) {
+            throw new BadCredentialsException("Unable to validate token", e);
+        } catch (Exception e) {
+            throw new AuthenticationServiceException("Error authenticating with Keycloak server", e);
+        }
+
+        return token;
+    }
 }

@@ -24,13 +24,17 @@ import org.keycloak.adapters.springsecurity.support.KeycloakSpringAdapterUtils;
 import org.keycloak.common.VerificationException;
 import org.keycloak.representations.AccessTokenResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
@@ -42,13 +46,12 @@ import java.util.Arrays;
 @Component
 public class KeycloakDirectAccessGrantService implements DirectAccessGrantService {
 
+    protected RestTemplate template;
+
     @Autowired
     private KeycloakDeployment keycloakDeployment;
-
     @Autowired
     private KeycloakConfidentialClientRequestFactory requestFactory;
-
-    protected RestTemplate template;
 
     @PostConstruct
     public void init() {
@@ -58,36 +61,74 @@ public class KeycloakDirectAccessGrantService implements DirectAccessGrantServic
     @Override
     public RefreshableKeycloakSecurityContext login(String username, String password) throws VerificationException {
 
-        final MultiValueMap<String,String> body = new LinkedMultiValueMap<>();
-        final HttpHeaders headers = new HttpHeaders();
+        ArrayList<KeyValuePair> bodyParams = new ArrayList<>();
+        bodyParams.add(new KeyValuePair("username", username));
+        bodyParams.add(new KeyValuePair("password", password));
+        bodyParams.add(new KeyValuePair("scope", "openid"));
+        bodyParams.add(new KeyValuePair(OAuth2Constants.GRANT_TYPE, OAuth2Constants.PASSWORD));
 
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
-        body.set("username", username);
-        body.set("password", password);
-        body.set("scope", "openid");
-        body.set(OAuth2Constants.GRANT_TYPE, OAuth2Constants.PASSWORD);
-
-        AccessTokenResponse response = template.postForObject(keycloakDeployment.getTokenUrl(), new HttpEntity<>(body, headers), AccessTokenResponse.class);
+        AccessTokenResponse response = template.postForObject(keycloakDeployment.getTokenUrl(),
+                new HttpEntity<>(createBody(bodyParams), createHeaders()), AccessTokenResponse.class);
 
         return KeycloakSpringAdapterUtils.createKeycloakSecurityContext(keycloakDeployment, response);
     }
 
     @Override
     public void logout(String refreshToken) {
-        final MultiValueMap<String,String> body = new LinkedMultiValueMap<>();
+
+        ArrayList<KeyValuePair> bodyParams = bodyParamsForRefreshToken(refreshToken);
+        template.exchange(keycloakDeployment.getLogoutUrl().build(),
+                HttpMethod.POST, new HttpEntity<>(createBody(bodyParams), createHeaders()), String.class);
+    }
+
+    @Override
+    public RefreshableKeycloakSecurityContext refresh(String refreshToken) throws VerificationException {
+        ArrayList<KeyValuePair> bodyParams = bodyParamsForRefreshToken(refreshToken);
+        bodyParams.add(new KeyValuePair(OAuth2Constants.GRANT_TYPE, OAuth2Constants.REFRESH_TOKEN));
+
+        AccessTokenResponse response = template.postForObject(keycloakDeployment.getTokenUrl(), new HttpEntity<>(createBody(bodyParams),
+                createHeaders()), AccessTokenResponse.class);
+
+        return KeycloakSpringAdapterUtils.createKeycloakSecurityContext(keycloakDeployment, response);
+    }
+
+    private ArrayList<KeyValuePair> bodyParamsForRefreshToken(String refreshToken) {
+        ArrayList<KeyValuePair> bodyParams = new ArrayList<>();
+
+        bodyParams.add(new KeyValuePair("client_id", keycloakDeployment.getResourceName()));
+        bodyParams.add(new KeyValuePair("client_secret", keycloakDeployment.getResourceCredentials().get("secret").toString()));
+        bodyParams.add(new KeyValuePair("refresh_token", refreshToken));
+
+        return bodyParams;
+    }
+
+    private MultiValueMap<String, String> createBody(ArrayList<KeyValuePair> valuePairList) {
+        final LinkedMultiValueMap body = new LinkedMultiValueMap<>();
+
+        for (KeyValuePair valuePair : valuePairList) {
+            body.add(valuePair.key, valuePair.value);
+        }
+
+        return body;
+    }
+
+    private HttpHeaders createHeaders() {
         final HttpHeaders headers = new HttpHeaders();
 
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
 
-        body.set("client_id", keycloakDeployment.getResourceName());
-        body.set("client_secret", keycloakDeployment.getResourceCredentials().get("secret").toString());
-        body.set("refresh_token", refreshToken);
-
-        template.exchange(keycloakDeployment.getLogoutUrl().build(),
-                HttpMethod.POST, new HttpEntity<>(body, headers), String.class);
-
+        return headers;
     }
 
+    class KeyValuePair {
+
+        private String key;
+        private String value;
+
+        public KeyValuePair(String key, String value) {
+            this.key = key;
+            this.value = value;
+        }
+    }
 }
