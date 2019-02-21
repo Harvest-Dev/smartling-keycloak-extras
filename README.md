@@ -36,9 +36,34 @@ principal to be loaded from a Spring Security user detail service.
 
 ## Using Smartling Keycloak Extras
 
+
+
 Smartling Keycloak Extras are now distributed via [JCenter]. Simply add JCenter as repository in your build.
-to your build.
 
 [jcenter]: https://bintray.com/bintray/jcenter
 [keycloak]: http://keycloak.org
 [repo]: https://dl.bintray.com/smartling/release
+
+
+##Destribution to github through site-maven-plugin
+
+GITHUB_USER, GITHUB_KEY should be provided as env variables
+
+mvn deploy -s settings.xml -DskipTests
+
+#usage
+
+Simply add to ```repositories``` in your pom.xml
+
+```
+ <repository>
+    <id>smartling-keycloak-extras-mvn-repo</id>
+    <url>https://raw.github.com/GITHUB_USER/smartling-keycloak-extras/mvn-repo</url>
+    <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>always</updatePolicy>
+    </snapshots>
+</repository>
+
+```
+

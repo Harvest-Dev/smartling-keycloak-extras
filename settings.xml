@@ -9,7 +9,8 @@
         </server>
         <server>
             <id>github</id>
-            <username>dmushkov</username>
+            <username>${env.GITHUB_USER}</username>
+            <password>${env.GITHUB_KEY}</password>
         </server>
     </servers>
 </settings>

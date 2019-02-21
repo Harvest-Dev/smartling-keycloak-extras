@@ -132,7 +132,8 @@
                     <branch>refs/heads/mvn-repo</branch>                       <!-- remote branch name -->
                     <includes><include>**/*</include></includes>
                     <repositoryName>smartling-keycloak-extras</repositoryName>  <!-- github repo name -->
-                    <repositoryOwner>dmushkov</repositoryOwner>                 <!-- github username  -->
+                    <!--suppress UnresolvedMavenProperty -->
+                    <repositoryOwner>${env.GITHUB_USER}</repositoryOwner>                 <!-- github username  -->
                     <merge>true</merge>
                 </configuration>
                 <executions>
