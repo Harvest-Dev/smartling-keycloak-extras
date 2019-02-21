@@ -125,7 +125,7 @@ public class DirectAccessGrantAuthenticationProvider implements AuthenticationPr
      * @param refreshToken
      * @return
      */
-    public Authentication renew(String refreshToken) {
+    public Authentication refresh(String refreshToken) {
         RefreshableKeycloakSecurityContext context;
         KeycloakAuthenticationToken token;
         Collection<? extends GrantedAuthority> authorities;

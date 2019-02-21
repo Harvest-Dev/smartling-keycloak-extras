@@ -83,7 +83,7 @@ public class DirectAccessGrantAuthenticationProviderTest {
         KeycloakPrincipal principal = (KeycloakPrincipal)authentication.getPrincipal();
         String refreshToken = ((RefreshableKeycloakSecurityContext) principal.getKeycloakSecurityContext()).getRefreshToken();
 
-        directAccessGrantAuthenticationProvider.renew(refreshToken);
+        directAccessGrantAuthenticationProvider.refresh(refreshToken);
 
         assertNotNull(authentication);
         assertTrue(authentication.isAuthenticated());
