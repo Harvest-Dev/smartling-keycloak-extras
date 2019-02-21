@@ -51,7 +51,7 @@ GITHUB_USER, GITHUB_KEY should be provided as env variables
 
 mvn deploy -s settings.xml -DskipTests
 
-#usage
+# usage
 
 Simply add to ```repositories``` in your pom.xml
 
