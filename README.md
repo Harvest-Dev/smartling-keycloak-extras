@@ -45,7 +45,7 @@ Smartling Keycloak Extras are now distributed via [JCenter]. Simply add JCenter 
 [repo]: https://dl.bintray.com/smartling/release
 
 
-##Destribution to github through site-maven-plugin
+## Destribution to github through site-maven-plugin
 
 GITHUB_USER, GITHUB_KEY should be provided as env variables
 
