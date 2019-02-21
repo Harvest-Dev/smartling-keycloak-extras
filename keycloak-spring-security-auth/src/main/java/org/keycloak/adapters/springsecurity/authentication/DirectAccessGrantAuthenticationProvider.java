@@ -121,7 +121,7 @@ public class DirectAccessGrantAuthenticationProvider implements AuthenticationPr
     }
 
     /**
-     *
+     * Get new token for the provided refresh_token
      * @param refreshToken
      * @return
      */

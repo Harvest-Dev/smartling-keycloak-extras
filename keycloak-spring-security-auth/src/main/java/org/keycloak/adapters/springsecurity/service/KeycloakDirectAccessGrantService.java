@@ -61,11 +61,11 @@ public class KeycloakDirectAccessGrantService implements DirectAccessGrantServic
     @Override
     public RefreshableKeycloakSecurityContext login(String username, String password) throws VerificationException {
 
-        ArrayList<KeyValuePair> bodyParams = new ArrayList<>();
-        bodyParams.add(new KeyValuePair("username", username));
-        bodyParams.add(new KeyValuePair("password", password));
-        bodyParams.add(new KeyValuePair("scope", "openid"));
-        bodyParams.add(new KeyValuePair(OAuth2Constants.GRANT_TYPE, OAuth2Constants.PASSWORD));
+        ArrayList<BodyParameter> bodyParams = new ArrayList<>();
+        bodyParams.add(new BodyParameter("username", username));
+        bodyParams.add(new BodyParameter("password", password));
+        bodyParams.add(new BodyParameter("scope", "openid"));
+        bodyParams.add(new BodyParameter(OAuth2Constants.GRANT_TYPE, OAuth2Constants.PASSWORD));
 
         AccessTokenResponse response = template.postForObject(keycloakDeployment.getTokenUrl(),
                 new HttpEntity<>(createBody(bodyParams), createHeaders()), AccessTokenResponse.class);
@@ -76,15 +76,15 @@ public class KeycloakDirectAccessGrantService implements DirectAccessGrantServic
     @Override
     public void logout(String refreshToken) {
 
-        ArrayList<KeyValuePair> bodyParams = bodyParamsForRefreshToken(refreshToken);
+        ArrayList<BodyParameter> bodyParams = createBodyParameters(refreshToken);
         template.exchange(keycloakDeployment.getLogoutUrl().build(),
                 HttpMethod.POST, new HttpEntity<>(createBody(bodyParams), createHeaders()), String.class);
     }
 
     @Override
     public RefreshableKeycloakSecurityContext refresh(String refreshToken) throws VerificationException {
-        ArrayList<KeyValuePair> bodyParams = bodyParamsForRefreshToken(refreshToken);
-        bodyParams.add(new KeyValuePair(OAuth2Constants.GRANT_TYPE, OAuth2Constants.REFRESH_TOKEN));
+        ArrayList<BodyParameter> bodyParams = createBodyParameters(refreshToken);
+        bodyParams.add(new BodyParameter(OAuth2Constants.GRANT_TYPE, OAuth2Constants.REFRESH_TOKEN));
 
         AccessTokenResponse response = template.postForObject(keycloakDeployment.getTokenUrl(), new HttpEntity<>(createBody(bodyParams),
                 createHeaders()), AccessTokenResponse.class);
@@ -92,20 +92,20 @@ public class KeycloakDirectAccessGrantService implements DirectAccessGrantServic
         return KeycloakSpringAdapterUtils.createKeycloakSecurityContext(keycloakDeployment, response);
     }
 
-    private ArrayList<KeyValuePair> bodyParamsForRefreshToken(String refreshToken) {
-        ArrayList<KeyValuePair> bodyParams = new ArrayList<>();
+    private ArrayList<BodyParameter> createBodyParameters(String refreshToken) {
+        ArrayList<BodyParameter> bodyParams = new ArrayList<>();
 
-        bodyParams.add(new KeyValuePair("client_id", keycloakDeployment.getResourceName()));
-        bodyParams.add(new KeyValuePair("client_secret", keycloakDeployment.getResourceCredentials().get("secret").toString()));
-        bodyParams.add(new KeyValuePair("refresh_token", refreshToken));
+        bodyParams.add(new BodyParameter("client_id", keycloakDeployment.getResourceName()));
+        bodyParams.add(new BodyParameter("client_secret", keycloakDeployment.getResourceCredentials().get("secret").toString()));
+        bodyParams.add(new BodyParameter("refresh_token", refreshToken));
 
         return bodyParams;
     }
 
-    private MultiValueMap<String, String> createBody(ArrayList<KeyValuePair> valuePairList) {
+    private MultiValueMap<String, String> createBody(ArrayList<BodyParameter> valuePairList) {
         final LinkedMultiValueMap body = new LinkedMultiValueMap<>();
 
-        for (KeyValuePair valuePair : valuePairList) {
+        for (BodyParameter valuePair : valuePairList) {
             body.add(valuePair.key, valuePair.value);
         }
 
@@ -121,12 +121,12 @@ public class KeycloakDirectAccessGrantService implements DirectAccessGrantServic
         return headers;
     }
 
-    class KeyValuePair {
+    class BodyParameter {
 
         private String key;
         private String value;
 
-        public KeyValuePair(String key, String value) {
+        public BodyParameter(String key, String value) {
             this.key = key;
             this.value = value;
         }
