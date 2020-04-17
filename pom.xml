@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.smartling.keycloak.extras</groupId>
     <artifactId>keycloak-extras-parent</artifactId>
-    <version>0.8.0-SNAPSHOT</version>
+    <version>0.9.0-SNAPSHOT</version>
     <name>Keycloak Spring Security Extras</name>
     <packaging>pom</packaging>
 
@@ -130,7 +130,9 @@
                     <noJekyll>true</noJekyll>                                  <!-- disable webpage processing -->
                     <outputDirectory>${project.build.directory}/mvn-repo</outputDirectory> <!-- matches distribution management repository url above -->
                     <branch>refs/heads/mvn-repo</branch>                       <!-- remote branch name -->
-                    <includes><include>**/*</include></includes>
+                    <includes>
+                        <include>**/*</include>
+                    </includes>
                     <repositoryName>smartling-keycloak-extras</repositoryName>  <!-- github repo name -->
                     <!--suppress UnresolvedMavenProperty -->
                     <repositoryOwner>${env.GITHUB_USER}</repositoryOwner>                 <!-- github username  -->
