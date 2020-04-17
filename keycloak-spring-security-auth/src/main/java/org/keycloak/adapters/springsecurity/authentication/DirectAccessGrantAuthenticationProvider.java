@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.keycloak.adapters.springsecurity.authentication;
 
 import org.keycloak.adapters.KeycloakDeployment;
@@ -31,6 +30,7 @@ import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMap
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
+import org.keycloak.adapters.KeycloakConfigResolver;
 
 /**
  * {@link AuthenticationProvider} implementing the OAuth2 resource owner password credentials
@@ -45,32 +45,45 @@ import java.util.Collection;
  *
  * @author <a href="mailto:srossillo@smartling.com">Scott Rossillo</a>
  */
-public class DirectAccessGrantAuthenticationProvider implements AuthenticationProvider {
+public class DirectAccessGrantAuthenticationProvider implements AuthenticationProvider
+{
 
-    protected final KeycloakDeployment keycloakDeployment;
+    protected final KeycloakConfigResolver configResolver;
+
+    protected KeycloakDeployment keycloakDeployment;
+
     protected final DirectAccessGrantService directAccessGrantService;
+
     private GrantedAuthoritiesMapper grantedAuthoritiesMapper = null;
 
-    public DirectAccessGrantAuthenticationProvider(KeycloakDeployment keycloakDeployment, DirectAccessGrantService directAccessGrantService) {
-        this.keycloakDeployment = keycloakDeployment;
+    public DirectAccessGrantAuthenticationProvider(KeycloakConfigResolver configResolver, DirectAccessGrantService directAccessGrantService)
+    {
+        this.configResolver = configResolver;
         this.directAccessGrantService = directAccessGrantService;
     }
 
     @Override
-    public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+    public Authentication authenticate(Authentication authentication) throws AuthenticationException
+    {
         String username = resolveUsername(authentication.getPrincipal());
         String password = (String) authentication.getCredentials();
         RefreshableKeycloakSecurityContext context;
         KeycloakAuthenticationToken token;
         Collection<? extends GrantedAuthority> authorities;
 
-        try {
+        try
+        {
+            resolveKeycloakDeploymentIfNull();
             context = directAccessGrantService.login(username, password);
             authorities = KeycloakSpringAdapterUtils.createGrantedAuthorities(context, grantedAuthoritiesMapper);
             token = new KeycloakAuthenticationToken(KeycloakSpringAdapterUtils.createAccount(keycloakDeployment, context), true, authorities);
-        } catch (VerificationException e) {
+        }
+        catch(VerificationException e)
+        {
             throw new BadCredentialsException("Unable to validate token", e);
-        } catch (Exception e) {
+        }
+        catch(Exception e)
+        {
             throw new AuthenticationServiceException("Error authenticating with Keycloak server", e);
         }
 
@@ -84,31 +97,36 @@ public class DirectAccessGrantAuthenticationProvider implements AuthenticationPr
      * @return the username from the given <code>principal</code>
      * @throws AuthenticationCredentialsNotFoundException if the username cannot be resolved
      */
-    public String resolveUsername(Object principal) {
+    public String resolveUsername(Object principal)
+    {
 
-        if (principal instanceof String)
+        if(principal instanceof String)
+        {
             return (String) principal;
+        }
 
-        if (principal instanceof UserDetails)
-            return ((UserDetails)principal).getUsername();
+        if(principal instanceof UserDetails)
+        {
+            return ((UserDetails) principal).getUsername();
+        }
 
         throw new AuthenticationCredentialsNotFoundException("Can't find username on: " + principal);
     }
 
     @Override
-    public boolean supports(Class<?> authentication) {
+    public boolean supports(Class<?> authentication)
+    {
         return DirectAccessGrantToken.class.isAssignableFrom(authentication)
-                || UsernamePasswordAuthenticationToken.class.isAssignableFrom(authentication);
+            || UsernamePasswordAuthenticationToken.class.isAssignableFrom(authentication);
     }
-
-
 
     /**
      * Set the optional {@link GrantedAuthoritiesMapper} for this {@link AuthenticationProvider}.
      *
      * @param grantedAuthoritiesMapper the <code>GrantedAuthoritiesMapper</code> to use
      */
-    public void setGrantedAuthoritiesMapper(GrantedAuthoritiesMapper grantedAuthoritiesMapper) {
+    public void setGrantedAuthoritiesMapper(GrantedAuthoritiesMapper grantedAuthoritiesMapper)
+    {
         this.grantedAuthoritiesMapper = grantedAuthoritiesMapper;
     }
 
@@ -116,7 +134,8 @@ public class DirectAccessGrantAuthenticationProvider implements AuthenticationPr
      *
      * @param refreshToken
      */
-    public void logout(String refreshToken) {
+    public void logout(String refreshToken)
+    {
         this.directAccessGrantService.logout(refreshToken);
     }
 
@@ -125,21 +144,39 @@ public class DirectAccessGrantAuthenticationProvider implements AuthenticationPr
      * @param refreshToken
      * @return
      */
-    public Authentication refresh(String refreshToken) {
+    public Authentication refresh(String refreshToken)
+    {
         RefreshableKeycloakSecurityContext context;
         KeycloakAuthenticationToken token;
         Collection<? extends GrantedAuthority> authorities;
 
-        try {
+        try
+        {
+            resolveKeycloakDeploymentIfNull();
             context = directAccessGrantService.refresh(refreshToken);
             authorities = KeycloakSpringAdapterUtils.createGrantedAuthorities(context, grantedAuthoritiesMapper);
             token = new KeycloakAuthenticationToken(KeycloakSpringAdapterUtils.createAccount(keycloakDeployment, context), true, authorities);
-        } catch (VerificationException e) {
+        }
+        catch(VerificationException e)
+        {
             throw new BadCredentialsException("Unable to validate token", e);
-        } catch (Exception e) {
+        }
+        catch(Exception e)
+        {
             throw new AuthenticationServiceException("Error authenticating with Keycloak server", e);
         }
 
         return token;
+    }
+
+    /**
+     * Permet la résolution du keycloakDeployment si celui-ci est null
+     */
+    private void resolveKeycloakDeploymentIfNull()
+    {
+        if(keycloakDeployment == null)
+        {
+            keycloakDeployment = configResolver.resolve(null);
+        }
     }
 }

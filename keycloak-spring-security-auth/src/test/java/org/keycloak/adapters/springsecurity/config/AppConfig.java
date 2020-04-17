@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.keycloak.adapters.springsecurity.config;
 
 import org.keycloak.adapters.KeycloakDeployment;
@@ -35,10 +34,13 @@ import java.io.IOException;
  */
 @Configuration
 @ComponentScan(basePackageClasses = KeycloakSecurityComponents.class)
-public class AppConfig {
+public class AppConfig
+{
 
     public static final String KNOWN_EMAIL = "srossillo@smartling.com";
+
     public static final String KNOWN_USERNAME = "srossillo";
+
     public static final String KNOWN_PASSWORD = "password";
 
     @Autowired
@@ -47,19 +49,17 @@ public class AppConfig {
     @Autowired
     protected KeycloakDeployment keycloakDeployment;
 
-
     @Bean
     KeycloakDeployment keycloakDeployment(@Value("${keycloak.configurationFile:WEB-INF/keycloak.json}") Resource keycloakConfigFileResource) throws IOException
     {
         return KeycloakDeploymentBuilder.build(keycloakConfigFileResource.getInputStream());
     }
 
-    @Bean
-    DirectAccessGrantAuthenticationProvider directAccessGrantAuthenticationProvider()
-    {
-        DirectAccessGrantAuthenticationProvider provider = new DirectAccessGrantAuthenticationProvider(keycloakDeployment, directAccessGrantService);
-        //provider.setDirectAccessGrantService(directAccessGrantService);
-        return provider;
-    }
-
+//    @Bean
+//    DirectAccessGrantAuthenticationProvider directAccessGrantAuthenticationProvider()
+//    {
+//        DirectAccessGrantAuthenticationProvider provider = new DirectAccessGrantAuthenticationProvider(keycloakDeployment, directAccessGrantService);
+//        //provider.setDirectAccessGrantService(directAccessGrantService);
+//        return provider;
+//    }
 }

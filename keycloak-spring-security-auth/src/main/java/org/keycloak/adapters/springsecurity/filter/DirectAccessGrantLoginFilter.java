@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.keycloak.adapters.springsecurity.filter;
 
 import org.keycloak.adapters.springsecurity.authentication.DirectAccessGrantAuthenticationProvider;
@@ -25,6 +24,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.springframework.util.StringUtils;
 
 /**
  * Processes an authentication form submission for a Keycloak secured client. This class is designed to be
@@ -35,26 +35,45 @@ import javax.servlet.http.HttpServletResponse;
  * @see DirectAccessGrantAuthenticationProvider
  * @see UsernamePasswordAuthenticationFilter
  */
-public class DirectAccessGrantLoginFilter extends UsernamePasswordAuthenticationFilter {
+public class DirectAccessGrantLoginFilter extends UsernamePasswordAuthenticationFilter
+{
 
     private boolean postOnly = true;
 
+    public static final String LOGIN_FORM_USERNAME_KEY = "login";
+
+    @Override
+    protected String obtainUsername(HttpServletRequest request)
+    {
+        String username = super.obtainUsername(request);
+
+        if(StringUtils.isEmpty(username))
+        {
+            username = request.getParameter(LOGIN_FORM_USERNAME_KEY);
+        }
+        return username;
+    }
+
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
-            throws AuthenticationException {
+        throws AuthenticationException
+    {
 
-        if (postOnly && !request.getMethod().equals("POST")) {
+        if(postOnly && !request.getMethod().equals("POST"))
+        {
             throw new AuthenticationServiceException("Authentication method not supported: " + request.getMethod());
         }
 
         String username = obtainUsername(request);
         String password = obtainPassword(request);
 
-        if (username == null) {
+        if(username == null)
+        {
             username = "";
         }
 
-        if (password == null) {
+        if(password == null)
+        {
             password = "";
         }
 
@@ -69,7 +88,8 @@ public class DirectAccessGrantLoginFilter extends UsernamePasswordAuthentication
     }
 
     @Override
-    public void setPostOnly(boolean postOnly) {
+    public void setPostOnly(boolean postOnly)
+    {
         super.setPostOnly(postOnly);
         this.postOnly = postOnly;
     }

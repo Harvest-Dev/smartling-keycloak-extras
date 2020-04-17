@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.keycloak.adapters.springsecurity.service;
 
 import org.keycloak.OAuth2Constants;
@@ -36,6 +35,7 @@ import org.springframework.web.client.RestTemplate;
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.Arrays;
+import org.keycloak.adapters.KeycloakConfigResolver;
 
 /**
  * Supports Keycloak's direct access grants API using direct REST invocations to obtain
@@ -44,56 +44,71 @@ import java.util.Arrays;
  * @author <a href="mailto:srossillo@smartling.com">Scott Rossillo</a>
  */
 @Component
-public class KeycloakDirectAccessGrantService implements DirectAccessGrantService {
+public class KeycloakDirectAccessGrantService implements DirectAccessGrantService
+{
 
     protected RestTemplate template;
 
     @Autowired
+    protected KeycloakConfigResolver configResolver;
+
     private KeycloakDeployment keycloakDeployment;
+
     @Autowired
     private KeycloakConfidentialClientRequestFactory requestFactory;
 
     @PostConstruct
-    public void init() {
+    public void init()
+    {
         template = new RestTemplate(requestFactory);
     }
 
     @Override
-    public RefreshableKeycloakSecurityContext login(String username, String password) throws VerificationException {
-
+    public RefreshableKeycloakSecurityContext login(String username, String password) throws VerificationException
+    {
         ArrayList<BodyParameter> bodyParams = new ArrayList<>();
         bodyParams.add(new BodyParameter("username", username));
         bodyParams.add(new BodyParameter("password", password));
         bodyParams.add(new BodyParameter("scope", "openid"));
         bodyParams.add(new BodyParameter(OAuth2Constants.GRANT_TYPE, OAuth2Constants.PASSWORD));
 
+        resolveKeycloakDeploymentIfNull();
+
         AccessTokenResponse response = template.postForObject(keycloakDeployment.getTokenUrl(),
-                new HttpEntity<>(createBody(bodyParams), createHeaders()), AccessTokenResponse.class);
+            new HttpEntity<>(createBody(bodyParams), createHeaders()), AccessTokenResponse.class);
 
         return KeycloakSpringAdapterUtils.createKeycloakSecurityContext(keycloakDeployment, response);
     }
 
     @Override
-    public void logout(String refreshToken) {
+    public void logout(String refreshToken)
+    {
+        resolveKeycloakDeploymentIfNull();
 
         ArrayList<BodyParameter> bodyParams = createBodyParameters(refreshToken);
         template.exchange(keycloakDeployment.getLogoutUrl().build(),
-                HttpMethod.POST, new HttpEntity<>(createBody(bodyParams), createHeaders()), String.class);
+            HttpMethod.POST, new HttpEntity<>(createBody(bodyParams), createHeaders()), String.class);
     }
 
     @Override
-    public RefreshableKeycloakSecurityContext refresh(String refreshToken) throws VerificationException {
+    public RefreshableKeycloakSecurityContext refresh(String refreshToken) throws VerificationException
+    {
         ArrayList<BodyParameter> bodyParams = createBodyParameters(refreshToken);
         bodyParams.add(new BodyParameter(OAuth2Constants.GRANT_TYPE, OAuth2Constants.REFRESH_TOKEN));
 
+        resolveKeycloakDeploymentIfNull();
+
         AccessTokenResponse response = template.postForObject(keycloakDeployment.getTokenUrl(), new HttpEntity<>(createBody(bodyParams),
-                createHeaders()), AccessTokenResponse.class);
+            createHeaders()), AccessTokenResponse.class);
 
         return KeycloakSpringAdapterUtils.createKeycloakSecurityContext(keycloakDeployment, response);
     }
 
-    private ArrayList<BodyParameter> createBodyParameters(String refreshToken) {
+    private ArrayList<BodyParameter> createBodyParameters(String refreshToken)
+    {
         ArrayList<BodyParameter> bodyParams = new ArrayList<>();
+
+        resolveKeycloakDeploymentIfNull();
 
         bodyParams.add(new BodyParameter("client_id", keycloakDeployment.getResourceName()));
         bodyParams.add(new BodyParameter("client_secret", keycloakDeployment.getResourceCredentials().get("secret").toString()));
@@ -102,17 +117,20 @@ public class KeycloakDirectAccessGrantService implements DirectAccessGrantServic
         return bodyParams;
     }
 
-    private MultiValueMap<String, String> createBody(ArrayList<BodyParameter> valuePairList) {
+    private MultiValueMap<String, String> createBody(ArrayList<BodyParameter> valuePairList)
+    {
         final LinkedMultiValueMap body = new LinkedMultiValueMap<>();
 
-        for (BodyParameter valuePair : valuePairList) {
+        for(BodyParameter valuePair : valuePairList)
+        {
             body.add(valuePair.key, valuePair.value);
         }
 
         return body;
     }
 
-    private HttpHeaders createHeaders() {
+    private HttpHeaders createHeaders()
+    {
         final HttpHeaders headers = new HttpHeaders();
 
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -121,12 +139,26 @@ public class KeycloakDirectAccessGrantService implements DirectAccessGrantServic
         return headers;
     }
 
-    class BodyParameter {
+    /**
+     * Permet la résolution du keycloakDeployment si celui-ci est null
+     */
+    private void resolveKeycloakDeploymentIfNull()
+    {
+        if(keycloakDeployment == null)
+        {
+            keycloakDeployment = configResolver.resolve(null);
+        }
+    }
+
+    class BodyParameter
+    {
 
         private String key;
+
         private String value;
 
-        public BodyParameter(String key, String value) {
+        public BodyParameter(String key, String value)
+        {
             this.key = key;
             this.value = value;
         }

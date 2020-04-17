@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.keycloak.adapters.springsecurity.service.context;
 
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.HttpClients;
+import org.keycloak.adapters.KeycloakConfigResolver;
 import org.keycloak.adapters.KeycloakDeployment;
 import org.keycloak.util.BasicAuthHelper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,20 +35,25 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class KeycloakConfidentialClientRequestFactory extends HttpComponentsClientHttpRequestFactory implements
-        ClientHttpRequestFactory {
+    ClientHttpRequestFactory
+{
 
     @Autowired
+    protected KeycloakConfigResolver configResolver;
+
     private KeycloakDeployment keycloakDeployment;
 
     /**
      * Creates a new Keycloak confidential client request factory.
      */
-    public KeycloakConfidentialClientRequestFactory() {
+    public KeycloakConfidentialClientRequestFactory()
+    {
         super(HttpClients.custom().disableCookieManagement().build());
     }
 
     @Override
-    protected void postProcessHttpRequest(HttpUriRequest request) {
+    protected void postProcessHttpRequest(HttpUriRequest request)
+    {
         request.setHeader(HttpHeaders.AUTHORIZATION, this.createBasicAuthorizationHeader());
     }
 
@@ -58,14 +63,29 @@ public class KeycloakConfidentialClientRequestFactory extends HttpComponentsClie
      *
      * @return an HTTP Basic authentication header for the current client
      */
-    protected String createBasicAuthorizationHeader() {
+    protected String createBasicAuthorizationHeader()
+    {
+        resolveKeycloakDeploymentIfNull();
+
         String user = keycloakDeployment.getResourceName();
         String pass = keycloakDeployment.getResourceCredentials().get("secret").toString();
 
-        if (keycloakDeployment.isPublicClient()) {
+        if(keycloakDeployment.isPublicClient())
+        {
             throw new IllegalStateException("Public clients are not supported");
         }
 
         return BasicAuthHelper.createHeader(user, pass);
+    }
+
+    /**
+     * Permet la résolution du keycloakDeployment si celui-ci est null
+     */
+    private void resolveKeycloakDeploymentIfNull()
+    {
+        if(keycloakDeployment == null)
+        {
+            keycloakDeployment = configResolver.resolve(null);
+        }
     }
 }
